@@ -1,1 +1,154 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>百度地图</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+        html{height:100%}
+        body{height:100%;margin:0px;padding:0px}
+        #container{height:100%}
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=4XNjk0cxda1SZhXKgPsx66GZnbt5GMnC"></script>
+</head>
+<body>
+你想要查找那一路的公交路线：<input type="text" placeholder="比如输入：65" id="zz"><input type="button" id="btn" value="搜索" />
+<div id="container"></div>
+<script>
+    $(function () {
+        var map = new BMap.Map("container");
+        var point = new BMap.Point(113.908545,35.300081);
+        map.centerAndZoom(point, 15);
+        map.enableScrollWheelZoom(true);//缩放功能
+        map.addControl(new BMap.NavigationControl());//左上角平移缩放控件
+        map.addControl(new BMap.ScaleControl());//左下方缩放比例控件
+        map.addControl(new BMap.MapTypeControl());//右上角地图显示类型。地图，卫星，三维三种类型
+        map.setCurrentCity("郑州");
+        var x =113.908545;
+        var y = 35.300081;
+        var ggPoint = new BMap.Point(x,y);
+
+        //坐标转换完之后的回调函数
+        translateCallback = function (data){
+            if(data.status === 0) {
+                var marker = new BMap.Marker(data.points[0]);
+                map.addOverlay(marker);
+                var label = new BMap.Label("转换后的百度坐标（正确）",{offset:new BMap.Size(20,-10)});
+                marker.setLabel(label); //添加百度label
+                map.setCenter(data.points[0]);
+            }
+        }
+
+        var xx=  [
+            {
+                "featureType": "road",
+                "elementType": "all",
+                "stylers": {
+                    "visibility": "off"
+                }
+            },
+                {
+                    "featureType": "highway",
+                    "elementType": "geometry",
+                    "stylers": {
+                        "color": "#f49935",
+                        "visibility": "off"
+                    }
+                },
+                {
+                    "featureType": "railway",
+                    "elementType": "all",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                },
+                {
+                    "featureType": "local",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "all",
+                    "stylers": {
+                        "color": "#d1e5ff",
+                        "visibility": "off"
+                    }
+                },
+                {
+                    "featureType": "local",
+                    "elementType": "labels",
+                    "stylers": {
+                        "visibility": "off"
+                    }
+                }
+            ]
+        map.setMapStyle({
+            styleJson:[[xx]]
+        });
+        //map.setMapStyle({style:'googlelite'});
+        /*setTimeout(function(){
+            var convertor = new BMap.Convertor();
+            var pointArr = [];
+            pointArr.push(ggPoint);
+            convertor.translate(pointArr, 1, 5, translateCallback)
+        }, 1000);*/
+        //------------------------------------------------------------------------标注----------------------------------
+        var arr=[
+            {"x":113.908545,"y":35.300081,"desc":"汽车东站"}, //汽车东站
+            {"x":113.897175,"y":35.313759,"desc":"维多利亚城"}, //维多利亚城
+            {"x":113.890163,"y":35.304989,"desc":"人民公园"}, //人民公园
+            {"x":113.866452,"y":35.312669,"desc":"火车站"}, //火车站
+            {"x":113.834576,"y":35.306712,"desc":"金龙铜业"}, //金龙铜业
+            {"x":113.893376,"y":35.285941,"desc":"向阳公园"}, //向阳公园
+            {"x":114.088378,"y":35.396496,"desc":"客运南站"}, //客运南站
+        ];
+        for(var i=0;i<arr.length;i++){
+            var p = new BMap.Point(arr[i].x,arr[i].y);
+            var marker = new BMap.Marker(p);        // 创建标注
+            map.addOverlay(marker);
+            var label = new BMap.Label(arr[i].desc,{offset:new BMap.Size(20,-10)});
+            marker.setLabel(label); //添加百度label
+        }
+
+
+
+
+        var busline = new BMap.BusLineSearch(map,{
+            renderOptions:{map:map,panel:"r-result"},
+            onGetBusListComplete: function(result){
+                if(result) {
+                    var fstLine = result.getBusListItem(0);//获取第一个公交列表显示到map上
+                    busline.getBusLine(fstLine);
+                }
+            }
+        });
+        function busSearch(){
+            var z=$("#zz").val();
+            if(z){
+                busline.getBusList(z);
+            }
+        }
+        $("#btn").click(function () {
+            busSearch();
+        })
+        $(document).keypress(function(e) {
+            // 回车键事件
+            if(e.which == 13) {
+                var z=$("#zz").val();
+                if(z){
+                    busline.getBusList(z);
+                }
+            }
+        });
+
+    })
+
+
+</script>
+</body>
+</html>
